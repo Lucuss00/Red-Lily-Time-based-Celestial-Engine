@@ -24,6 +24,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Restore the original uploaded HTML
+        run: |
+          base64 --decode .github/source/red_lily.html.gz.b64 | gzip -dc > index.html
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
