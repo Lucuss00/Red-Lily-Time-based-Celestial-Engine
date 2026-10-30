@@ -1,4 +1,5 @@
 name: Deploy Red Lily to GitHub Pages
+run-name: Publish Red Lily website from main
 
 on:
   push:
