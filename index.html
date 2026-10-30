@@ -1,47 +1,977 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Red Lily - Time-based Celestial Engine</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;user-select:none;-webkit-user-select:none}body{font-family:'Kanit','Sarabun',sans-serif;background:#070a12;color:#fff;margin:0;padding:0;overflow:hidden;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center}.glass-panel{background:rgba(18,25,46,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(120,170,255,.25);box-shadow:0 20px 50px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.15)}.glass-card{background:rgba(255,255,255,.06);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12)}.chip-btn{transition:all .2s cubic-bezier(.4,0,.2,1)}.chip-btn:hover,.chip-btn:active{transform:translateY(-2px);background:rgba(65,105,225,.35);border-color:rgba(140,190,255,.8);box-shadow:0 4px 15px rgba(65,105,225,.4)}@keyframes btnGlow{0%,100%{box-shadow:0 0 15px rgba(220,38,38,.5),0 0 30px rgba(220,38,38,.2)}50%{box-shadow:0 0 25px rgba(239,68,68,.8),0 0 45px rgba(239,68,68,.4)}}.btn-glow{animation:btnGlow 3s infinite}#canvas-container{position:relative;box-shadow:0 25px 60px rgba(0,0,0,.85);border-radius:18px;overflow:hidden;max-height:98vh;max-width:98vw;aspect-ratio:720/1280;display:flex;justify-content:center;align-items:center}canvas{width:100%;height:100%;display:block}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Red Lily - Time-based Celestial Engine</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Thai Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body {
+            font-family: 'Kanit', 'Sarabun', sans-serif;
+            background-color: #070a12;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        /* Glassmorphic UI Elements */
+        .glass-panel {
+            background: rgba(18, 25, 46, 0.82);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(120, 170, 255, 0.25);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .chip-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .chip-btn:hover, .chip-btn:active {
+            transform: translateY(-2px);
+            background: rgba(65, 105, 225, 0.35);
+            border-color: rgba(140, 190, 255, 0.8);
+            box-shadow: 0 4px 15px rgba(65, 105, 225, 0.4);
+        }
+        /* Glow animation for primary button */
+        @keyframes btnGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(220, 38, 38, 0.5), 0 0 30px rgba(220, 38, 38, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.8), 0 0 45px rgba(239, 68, 68, 0.4); }
+        }
+        .btn-glow {
+            animation: btnGlow 3s infinite;
+        }
+        /* Custom Scrollbar & Canvas Container */
+        #canvas-container {
+            position: relative;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+            border-radius: 18px;
+            overflow: hidden;
+            max-height: 98vh;
+            max-width: 98vw;
+            aspect-ratio: 720 / 1280;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
 </head>
 <body>
-<div id="canvas-container" class="relative border border-slate-800/80">
-<canvas id="mainCanvas" width="720" height="1280"></canvas>
-<div class="absolute top-3 left-3 right-3 flex flex-col gap-2 z-10 pointer-events-none">
-<div class="glass-panel rounded-xl p-2.5 px-4 flex items-center justify-between pointer-events-auto"><div class="flex items-center gap-2.5"><span id="celestialIcon" class="text-xl">☀️</span><div><div id="timeDisplay" class="text-sm font-semibold tracking-wide text-amber-200">12:00 น.</div><div id="modeDisplay" class="text-[11px] text-sky-200/80 font-light">Daytime - Sun</div></div></div><div class="flex items-center gap-1.5"><button id="btnOpenModal" class="glass-card hover:bg-white/20 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition text-sky-100 active:scale-95"><span>🕒</span> <span class="hidden sm:inline">ตั้งเวลา</span></button><button id="btnPause" class="glass-card hover:bg-white/20 text-xs p-1.5 px-2 rounded-lg transition active:scale-95" title="พัก / เล่นต่อ"><span id="pauseIcon">⏸️</span></button><button id="btnReset" class="glass-card hover:bg-white/20 text-xs p-1.5 px-2 rounded-lg transition active:scale-95" title="เริ่มโตใหม่"><span>🔄</span></button></div></div>
-<div class="glass-panel rounded-lg p-1.5 px-3 flex items-center justify-between text-xs text-slate-200 pointer-events-auto"><span class="text-[11px] text-slate-300 hidden sm:inline">ปรับเวลา:</span><div class="flex items-center justify-around w-full sm:w-auto gap-1"><button id="btnMinus1h" class="hover:bg-white/10 px-2 py-1 rounded text-[11px] bg-slate-800/50 border border-slate-700/50 active:scale-95">-1 ชม.</button><button id="btnMinus15m" class="hover:bg-white/10 px-2 py-1 rounded text-[11px] bg-slate-800/50 border border-slate-700/50 active:scale-95">-15 นาที</button><button id="btnPlus15m" class="hover:bg-white/10 px-2 py-1 rounded text-[11px] bg-slate-800/50 border border-slate-700/50 active:scale-95">+15 นาที</button><button id="btnPlus1h" class="hover:bg-white/10 px-2 py-1 rounded text-[11px] bg-slate-800/50 border border-slate-700/50 active:scale-95">+1 ชม.</button></div></div></div>
-<div id="timeModal" class="absolute inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-30 transition-opacity duration-300"><div class="glass-panel rounded-2xl p-6 w-full max-w-sm flex flex-col gap-4 text-center border border-sky-500/30 shadow-2xl relative overflow-hidden"><div class="absolute -top-12 -left-12 w-32 h-32 bg-sky-500/20 rounded-full blur-2xl"></div><div class="absolute -bottom-12 -right-12 w-32 h-32 bg-rose-500/20 rounded-full blur-2xl"></div><div><h2 class="text-lg font-bold text-amber-100 tracking-wide">ตั้งเวลาจำลองท้องฟ้า</h2><p class="text-xs text-sky-200/80 mt-1 font-light">ประเทศไทย (GMT+7 Thailand Time)</p><p id="sysTimeNotice" class="text-[11px] text-amber-300/90 mt-1 bg-amber-950/40 py-1 px-2 rounded-md border border-amber-500/20 inline-block">เวลาจริงระบบ: --:-- น.</p></div><div class="flex flex-col gap-1 text-left"><label class="text-[11px] text-slate-300">ระบุเวลา (เช่น 14:30 หรือ 07.15):</label><div class="relative"><input type="text" id="timeInput" placeholder="14:30" maxlength="5" class="w-full bg-slate-950/80 border-2 border-sky-500/50 focus:border-sky-400 rounded-xl px-4 py-2.5 text-center text-xl font-mono font-bold tracking-widest text-amber-200 outline-none transition shadow-inner"><span class="absolute right-3 top-3 text-xs text-slate-400">น.</span></div></div><div class="flex flex-col gap-1.5 text-left"><span class="text-[11px] text-slate-300">เลือกช่วงเวลาด่วน:</span><div class="grid grid-cols-3 gap-2"><button class="chip-btn glass-card text-xs py-2 rounded-lg border border-slate-600/40 text-sky-100 font-medium" data-hour="7.0">🌅 07:00</button><button class="chip-btn glass-card text-xs py-2 rounded-lg border border-slate-600/40 text-sky-100 font-medium" data-hour="12.0">☀️ 12:00</button><button class="chip-btn glass-card text-xs py-2 rounded-lg border border-slate-600/40 text-sky-100 font-medium" data-hour="17.5">🌆 17:30</button><button class="chip-btn glass-card text-xs py-2 rounded-lg border border-slate-600/40 text-sky-100 font-medium" data-hour="21.0">🌙 21:00</button><button class="chip-btn glass-card text-xs py-2 rounded-lg border border-slate-600/40 text-sky-100 font-medium" data-hour="0.0">🌌 00:00</button><button class="chip-btn glass-card text-xs py-2 rounded-lg border border-sky-400/50 bg-sky-900/30 text-amber-200 font-medium" data-hour="-1">⏱️ เวลาจริง</button></div></div><button id="btnConfirmTime" class="mt-2 w-full bg-gradient-to-r from-rose-600 via-red-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-semibold py-3 rounded-xl shadow-lg transition active:scale-95 btn-glow text-sm flex items-center justify-center gap-2"><span>ตกลง / เริ่มแสดงผล</span><span>✨</span></button><p class="text-[10px] text-slate-400 font-light">กด Enter หรือแตะปุ่มเพื่อยืนยัน (กด T เพื่อเปลี่ยนเวลาได้เสมอ)</p></div></div>
-</div>
-<script>
-function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
-function createRng(seed){const gen=mulberry32(seed);return{random:gen,uniform:(min,max)=>min+(max-min)*gen(),normal:(mean=0,std=1)=>{let u=0,v=0;while(u===0)u=gen();while(v===0)v=gen();return mean+std*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)},triangular:(low,high,mode)=>{const u=gen(),c=(mode-low)/(high-low);if(u<c)return low+Math.sqrt(u*(high-low)*(mode-low));return high-Math.sqrt((1-u)*(high-low)*(high-mode))},integers:(min,max)=>Math.floor(min+gen()*(max-min))}}
-const rngMain=createRng(11);const W=720,H=1280,S=W/720,FPS=60,T_STEM=4,T_B0=5,T_B1=15,gx=W/2,gy=H*.82,HS=380*S;
-function smooth(x){x=Math.max(0,Math.min(1,x));return x*x*(3-2*x)}function lerp(a,b,t){return a+(b-a)*t}function interp(xVal,xArr,yArr){if(xVal<=xArr[0])return yArr[0];if(xVal>=xArr[xArr.length-1])return yArr[yArr.length-1];for(let i=0;i<xArr.length-1;i++){if(xVal>=xArr[i]&&xVal<=xArr[i+1]){const k=(xVal-xArr[i])/(xArr[i+1]-xArr[i]);return yArr[i]+k*(yArr[i+1]-yArr[i])}}return yArr[0]}
-const SKY_PALETTES=[{h:0,top:[10,14,32],bot:[25,40,75]},{h:4.5,top:[14,18,40],bot:[35,50,90]},{h:5.8,top:[45,55,115],bot:[180,110,100]},{h:6.8,top:[65,120,210],bot:[255,185,125]},{h:9,top:[60,145,235],bot:[170,220,252]},{h:12,top:[55,150,240],bot:[180,228,255]},{h:15.5,top:[65,140,230],bot:[195,215,245]},{h:17.2,top:[50,85,175],bot:[245,170,95]},{h:18.2,top:[32,45,105],bot:[225,100,70]},{h:19.2,top:[18,26,65],bot:[75,55,100]},{h:21,top:[12,16,36],bot:[30,45,80]},{h:24,top:[10,14,32],bot:[25,40,75]}];
-function getSkyColors(hour){const h=hour%24;for(let i=0;i<SKY_PALETTES.length-1;i++){const p0=SKY_PALETTES[i],p1=SKY_PALETTES[i+1];if(p0.h<=h&&h<=p1.h){const k=(h-p0.h)/(p1.h-p0.h+1e-6);return{top:p0.top.map((v,j)=>Math.round(lerp(v,p1.top[j],k))),bot:p0.bot.map((v,j)=>Math.round(lerp(v,p1.bot[j],k)))}}}return{top:SKY_PALETTES[0].top,bot:SKY_PALETTES[0].bot}}
-function getCelestialInfo(hour){const h=hour%24,isNight=h<6||h>=18;let p=0;if(!isNight)p=(h-6)/12;else p=h>=18?(h-18)/12:(h+6)/12;return{isNight,cx:lerp(W*.14,W*.86,p),cy:H*.58-Math.sin(Math.PI*p)*(H*.43),p}}
-function drawPointillistSun(ctx,cx,cy,rng,hour){const noonDiff=Math.abs(hour%24-12)/6;for(let i=0;i<1400;i++){const rCor=Math.pow(rng.uniform(28*S,210*S),1.15)/Math.pow(210*S,.15),rayBase=Math.floor(rng.uniform(0,8))*(2*Math.PI/8),thCor=rayBase+rng.normal(0,.22),px=Math.round(cx+rCor*Math.cos(thCor)),py=Math.round(cy+rCor*Math.sin(thCor));if(px>=0&&px<W&&py>=0&&py<H){const fade=Math.max(0,Math.min(1,1-rCor/(210*S))),alpha=Math.round(140*Math.pow(fade,1.8))/255;if(alpha>.01){const gC=Math.round(lerp(180,245,(1-noonDiff)*fade)),bC=Math.round(lerp(80,205,(1-noonDiff)*fade)),rad=rng.random()<.75?1:2;ctx.fillStyle=`rgba(255,${gC},${bC},${alpha})`;ctx.fillRect(px,py,rad,rad)}}}for(let i=0;i<850;i++){const rCore=Math.sqrt(rng.random())*34*S,thCore=rng.uniform(0,2*Math.PI),px=Math.round(cx+rCore*Math.cos(thCore)),py=Math.round(cy+rCore*Math.sin(thCore));if(px>=0&&px<W&&py>=0&&py<H){const fade=Math.max(0,Math.min(1,1-rCore/(34*S))),alpha=Math.round(lerp(180,255,fade))/255,gC=Math.round(lerp(220,255,1-noonDiff*.3)),bC=Math.round(lerp(150,245,1-noonDiff*.5)),rad=rng.random()<.65?1:2;ctx.fillStyle=`rgba(255,${gC},${bC},${alpha})`;ctx.fillRect(px,py,rad,rad)}}}
-function drawPointillistMoon(ctx,cx,cy,rng){for(let i=0;i<900;i++){const rH=Math.pow(rng.uniform(22*S,160*S),1.1)/Math.pow(160*S,.1),thH=rng.uniform(0,2*Math.PI),px=Math.round(cx+rH*Math.cos(thH)),py=Math.round(cy+rH*Math.sin(thH));if(px>=0&&px<W&&py>=0&&py<H){const fade=Math.max(0,Math.min(1,1-rH/(160*S))),alpha=Math.round(110*Math.pow(fade,1.6))/255;if(alpha>.01){ctx.fillStyle=`rgba(210,230,255,${alpha})`;ctx.fillRect(px,py,1,1)}}}let count=0;const rMax=30*S;while(count<1000){const candX=rng.uniform(-rMax,rMax),candY=rng.uniform(-rMax,rMax);if(candX*candX+candY*candY<=rMax*rMax){const cutX=candX-11*S;if(cutX*cutX+candY*candY>=(rMax*.88)**2){const px=Math.round(cx+candX),py=Math.round(cy+candY);if(px>=0&&px<W&&py>=0&&py<H){ctx.fillStyle=`rgba(${rng.integers(235,255)},${rng.integers(245,255)},255,${rng.uniform(190,255)/255})`;ctx.fillRect(px,py,rng.random()<.7?1:2,rng.random()<.7?1:2)}count++}}}}
-function drawNightStars(ctx,rng){for(let i=0;i<140;i++){const px=Math.round(rng.uniform(20,W-20)),py=Math.round(rng.uniform(20,H*.65));ctx.fillStyle=`rgba(240,248,255,${rng.uniform(90,240)/255})`;ctx.fillRect(px,py,rng.random()<.85?1:2,rng.random()<.85?1:2)}}
-function createSkyCanvas(hour){const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d'),{top,bot}=getSkyColors(hour),grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,`rgb(${top.join(',')})`);grad.addColorStop(1,`rgb(${bot.join(',')})`);ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);const{isNight,cx,cy}=getCelestialInfo(hour),rng=createRng(Math.floor(hour*100)+123);if(isNight){drawNightStars(ctx,rng);drawPointillistMoon(ctx,cx,cy,rng)}else drawPointillistSun(ctx,cx,cy,rng,hour);return c}
-function createCloudCanvas(width,height,seed){const c=document.createElement('canvas');c.width=width;c.height=height;const ctx=c.getContext('2d'),rng=createRng(seed),puffs=[];for(let i=0;i<8;i++)puffs.push({px:rng.uniform(width*.18,width*.82),py:rng.triangular(height*.35,height*.60,height*.78),rx:rng.uniform(width*.12,width*.22),ry:rng.uniform(height*.15,height*.30)});for(let i=0;i<3800;i++){const p=puffs[rng.integers(0,8)],ptX=p.px+rng.normal(0,.45)*p.rx,ptY=p.py+rng.normal(0,.42)*p.ry;if(ptX>=0&&ptX<width&&ptY>=0&&ptY<height){const y=ptY/height;let r,g,b,a;if(y<.45){r=Math.round(lerp(250,255,rng.random()));g=Math.round(lerp(252,255,rng.random()));b=255;a=rng.uniform(160,230)/255}else if(y<.70){r=Math.round(lerp(235,250,rng.random()));g=Math.round(lerp(242,252,rng.random()));b=255;a=rng.uniform(130,200)/255}else{r=Math.round(lerp(185,215,rng.random()));g=Math.round(lerp(210,230,rng.random()));b=Math.round(lerp(238,248,rng.random()));a=rng.uniform(90,160)/255}ctx.fillStyle=`rgba(${r},${g},${b},${a})`;const size=rng.random()<.7?1:2;ctx.fillRect(Math.round(ptX),Math.round(ptY),size,size)}}return c}
-const CLOUD_CONFIGS=[{w:520,h:200,y:90,speed:4.5,seed:101},{w:440,h:170,y:270,speed:7.5,seed:202},{w:490,h:190,y:470,speed:5.5,seed:303}].map(c=>({...c,w:Math.round(c.w*S),h:Math.round(c.h*S),y:Math.round(c.y*S),speed:c.speed*S}));let cachedSkyBase=null,lastRenderedHour=-999,cloudCanvases=null;function getBackground(t,hour,ctx){if(!cachedSkyBase||Math.abs(hour-lastRenderedHour)>.02){cachedSkyBase=createSkyCanvas(hour);lastRenderedHour=hour}if(!cloudCanvases)cloudCanvases=CLOUD_CONFIGS.map(c=>createCloudCanvas(c.w,c.h,c.seed));ctx.drawImage(cachedSkyBase,0,0);CLOUD_CONFIGS.forEach((c,i)=>{const span=W+c.w,offset=i*(span/CLOUD_CONFIGS.length),x=(t*c.speed+offset)%span-c.w;ctx.drawImage(cloudCanvases[i],Math.round(x),Math.round(c.y))})}
-function midrib(L,a0,curl,K=40){const us=new Float32Array(K+1),r=new Float32Array(K+1),h=new Float32Array(K+1),ds=L/K;let sumR=0,sumH=0;for(let i=1;i<=K;i++){us[i]=i/K;const al=a0+curl*Math.pow(us[i],1.6);sumR+=Math.sin(al)*ds;sumH+=Math.cos(al)*ds;r[i]=sumR;h[i]=sumH}return{us,r,h}}
-const NP=2300,petals=[];for(let k=0;k<6;k++){const outer=k%2===0,pu=new Float32Array(NP),pv=new Float32Array(NP),prof=new Float32Array(NP),keep=new Uint8Array(NP),base=new Float32Array(NP*3),stopsX=[0,.35,.7,1],stopR=[170,222,245,255],stopG=[10,16,24,42],stopB=[20,24,32,48];for(let i=0;i<NP;i++){pu[i]=Math.pow(rngMain.random(),.85);pv[i]=rngMain.uniform(-1,1);prof[i]=Math.pow(Math.sin(Math.PI*Math.pow(pu[i],.7)),.9);keep[i]=1;let r=interp(pu[i],stopsX,stopR),g=interp(pu[i],stopsX,stopG),b=interp(pu[i],stopsX,stopB);if(Math.abs(pv[i])<.07&&pu[i]<.55){r=255;g=95;b=45}else if(rngMain.random()<.1&&pu[i]<.6&&Math.abs(pv[i])<.75){r=92;g=4;b=18}if(Math.abs(pv[i])>.88){r*=1.08;g*=1.08;b*=1.08}const n=.82+.35*rngMain.random();base[i*3]=Math.min(255,r*n);base[i*3+1]=Math.min(255,g*n);base[i*3+2]=Math.min(255,b*n)}petals.push({phi:(k*60+8)*Math.PI/180,L:(outer?300:280)*S,Wm:(outer?64:72)*S,ac:outer?.10:.05,ao:outer?1.05:.82,curl:outer?.95:.75,pu,pv,prof,base,keep})}
-const NS=3200,st_s=new Float32Array(NS),st_dx=new Float32Array(NS),st_col=new Float32Array(NS*3);for(let i=0;i<NS;i++){st_s[i]=rngMain.random();st_dx[i]=rngMain.normal(0,1)*(3.2*S)*(1-.5*st_s[i]);const n=.8+.4*rngMain.random();st_col[i*3]=lerp(35,100,st_s[i])*n;st_col[i*3+1]=lerp(145,215,st_s[i])*n;st_col[i*3+2]=lerp(50,95,st_s[i])*n}
-const leavesConfig=[{s0:.10,Lf:190,side:1},{s0:.24,Lf:175,side:-1},{s0:.40,Lf:150,side:1},{s0:.56,Lf:120,side:-1}],leaves=leavesConfig.map(cfg=>{const n=900,u=new Float32Array(n),v=new Float32Array(n),prof=new Float32Array(n),col=new Float32Array(n*3);for(let i=0;i<n;i++){u[i]=Math.pow(rngMain.random(),.9);v[i]=rngMain.uniform(-1,1);prof[i]=Math.pow(Math.sin(Math.PI*Math.pow(u[i],.8)),.8);let r=lerp(35,110,u[i]),g=lerp(145,220,u[i]),b=lerp(55,105,u[i]);if(Math.abs(v[i])<.08){r=170;g=235;b=150}const noise=.8+.4*rngMain.random();col[i*3]=Math.min(255,r*noise);col[i*3+1]=Math.min(255,g*noise);col[i*3+2]=Math.min(255,b*noise)}return{s0:cfg.s0,L:cfg.Lf*S,side:cfg.side,n,u,v,prof,col}});
-const NG=5000,so_dx=new Float32Array(NG),so_y=new Float32Array(NG),so_col=new Float32Array(NG*3);for(let i=0;i<NG;i++){so_dx[i]=rngMain.uniform(-340,340)*S;const mound=(1-(so_dx[i]/(340*S))**2)*55*S;so_y[i]=gy-mound*Math.sqrt(rngMain.random())+rngMain.normal(0,1.5);so_col[i*3]=lerp(80,130,rngMain.random())*.8;so_col[i*3+1]=lerp(65,100,rngMain.random())*.8;so_col[i*3+2]=lerp(42,65,rngMain.random())*.8}
-const ND=450,d_x=new Float32Array(ND),d_y=new Float32Array(ND),d_sp=new Float32Array(ND),d_ph=new Float32Array(ND),d_f=new Float32Array(ND);for(let i=0;i<ND;i++){d_x[i]=rngMain.random()*W;d_y[i]=rngMain.random()*H;d_sp[i]=rngMain.uniform(6,22)*S;d_ph[i]=rngMain.random()*6.28;d_f[i]=rngMain.uniform(1,4)}const NF=140,f_off=new Float32Array(NF),f_ph=new Float32Array(NF),f_dr=new Float32Array(NF),f_sp=new Float32Array(NF);for(let i=0;i<NF;i++){f_off[i]=rngMain.random();f_ph[i]=rngMain.random()*6.28;f_dr[i]=rngMain.uniform(-80,80)*S;f_sp[i]=rngMain.uniform(.05,.12)}const stam=[];for(let k=0;k<6;k++){const an=new Float32Array(70);for(let j=0;j<70;j++)an[j]=rngMain.normal(0,1);stam.push({phi:(k*60+38)*Math.PI/180,an})}function stemX(s,t){return gx+30*S*Math.sin(2.2*s)+10*S*Math.sin(.9*t)*s*s}function stemY(s){return gy-s*HS}
-let pointPool=[];function renderScene(t,hour,ctx){pointPool=[];const g=smooth(t/T_STEM),e=smooth((t-T_B0)/(T_B1-T_B0)),rev=smooth((t-T_STEM+.3)/1.6),hx=stemX(1,t),hy=stemY(1);for(let i=0;i<ND;i++){const tw=.35+.65*(Math.sin(t*d_f[i]+d_ph[i])>.2?1:0),yy=((d_y[i]-t*d_sp[i])%H+H)%H;pointPool.push({x:d_x[i],y:yy,z:-1000,r:255*tw*.65,g:245*tw*.65,b:210*tw*.65})}for(let i=0;i<NG;i++)pointPool.push({x:so_dx[i]+gx,y:so_y[i],z:-500,r:so_col[i*3],g:so_col[i*3+1],b:so_col[i*3+2]});for(let i=0;i<NS;i++)if(st_s[i]<=g){const s=st_s[i];pointPool.push({x:stemX(s,t)+st_dx[i],y:stemY(s),z:-100,r:st_col[i*3],g:st_col[i*3+1],b:st_col[i*3+2]})}leaves.forEach(lf=>{const lg=Math.max(0,Math.min(1,(g-lf.s0)*2.5));if(lg>.01){const L=lf.L*lg,a0=.85+.09*Math.sin(t*1.5+lf.s0*4.5),curl=1.10+.18*Math.cos(t*1.3+lf.s0*3.8),{us,r,h}=midrib(L,a0,curl),bx=stemX(lf.s0,t),by=stemY(lf.s0);for(let i=0;i<lf.n;i++){const u=lf.u[i],v=lf.v[i],rr=interp(u,us,r),hh=interp(u,us,h),phase=t*2.6-u*3.6+lf.s0*6,waveY=Math.sin(phase)*Math.pow(u,1.6)*12*S,waveX=Math.cos(phase*.8)*Math.pow(u,1.5)*7*S,wid=15*S*lf.prof[i]*lg;pointPool.push({x:bx+lf.side*(rr+v*wid*.35+waveX),y:by-hh+v*wid+waveY,z:-90,r:lf.col[i*3],g:lf.col[i*3+1],b:lf.col[i*3+2]})}}});if(rev>.01){const psi=.25+t*.22,tau=.5,cp=Math.cos(psi),sp=Math.sin(psi),ct=Math.cos(tau),st=Math.sin(tau),swayT=Math.sin(t*.8)*.02;petals.forEach(p=>{const Ls=p.L*(.45+.55*e)*(.35+.65*rev),a0=lerp(p.ac,p.ao,e),curl=(.12+.88*e)*p.curl,{us,r,h}=midrib(Ls,a0,curl);for(let i=0;i<NP;i++){const u=p.pu[i];if(u<=rev&&p.keep[i]){const v=p.pv[i],pr=p.prof[i],rr=interp(u,us,r),hh=interp(u,us,h),wid=p.Wm*(.55+.45*e)*pr*(.35+.65*rev),ph=p.phi,X=rr*Math.cos(ph)-v*wid*Math.sin(ph),Z=rr*Math.sin(ph)+v*wid*Math.cos(ph),Y=hh+v*v*wid*(.30*(1-e)-.25*e),Xp=X*cp+Z*sp,Zp=-X*sp+Z*cp,sy=Y*ct-Zp*st,shade=.55+.45*Math.max(0,Math.min(1,Zp/p.L*.8+.5));let rC=p.base[i*3],gC=p.base[i*3+1],bC=p.base[i*3+2];const tint=(1-e)*Math.max(0,Math.min(1,u*1.3))*.5;rC=rC*(1-tint)+235*tint;gC=gC*(1-tint)+30*tint;bC=bC*(1-tint)+48*tint;pointPool.push({x:hx+Xp+swayT*sy,y:hy-sy,z:Zp,r:rC*shade,g:gC*shade,b:bC*shade})}}});if(e>.28){const sr=smooth((e-.28)/.4);stam.forEach(sd=>{const Ls=215*S*(.4+.6*e)*sr,{us,r,h}=midrib(Ls,lerp(.15,.62,e),.55*e);for(let j=0;j<45;j++){const u=j/45,rr=interp(u,us,r),hh=interp(u,us,h),ph=sd.phi,X=rr*Math.cos(ph),Z=rr*Math.sin(ph),Xp=X*cp+Z*sp,Zp=-X*sp+Z*cp,sy=hh*ct-Zp*st;pointPool.push({x:hx+Xp,y:hy-sy,z:Zp+5,r:255,g:215,b:205})}const tx=r[r.length-1]*Math.cos(sd.phi),tz=r[r.length-1]*Math.sin(sd.phi),ty=h[h.length-1],txp=tx*cp+tz*sp,tzp=-tx*sp+tz*cp,tsy=ty*ct-tzp*st;for(let j=0;j<35;j++){const anx=sd.an[j*2]*5*S,any=sd.an[j*2+1]*5*S,noise=.8+.4*rngMain.random();pointPool.push({x:hx+txp+anx*1.6,y:hy-tsy+any*.7,z:tzp+6,r:Math.min(255,255*noise),g:Math.min(255,140*noise),b:Math.min(255,20*noise)})}})}}if(e>.6){const fa=smooth((e-.6)/.4);for(let i=0;i<NF;i++){const q=(t*f_sp[i]+f_off[i])%1,fx=hx+f_dr[i]*q+Math.sin(q*7+f_ph[i])*25*S,fy=(hy-110*S)+q*(gy-hy+90*S),fade=(1-q)*fa,gold=f_ph[i]>3.1;pointPool.push({x:fx,y:fy,z:300,r:255*fade,g:(gold?245:130)*fade,b:(gold?160:80)*fade})}}pointPool.sort((a,b)=>a.z-b.z);getBackground(t,hour,ctx);const img=ctx.getImageData(0,0,W,H),data=img.data;for(let i=0;i<pointPool.length;i++){const p=pointPool[i],x=Math.floor(p.x),y=Math.floor(p.y);if(x>=0&&x<W-2&&y>=0&&y<H-2){const r=Math.min(255,Math.max(0,Math.round(p.r))),g=Math.min(255,Math.max(0,Math.round(p.g))),b=Math.min(255,Math.max(0,Math.round(p.b))),offsets=[(y*W+x)*4,(y*W+x+1)*4,((y+1)*W+x)*4];for(const o of offsets){data[o]=r;data[o+1]=g;data[o+2]=b}}}ctx.putImageData(img,0,0)}
-const canvas=document.getElementById('mainCanvas'),ctx=canvas.getContext('2d'),timeModal=document.getElementById('timeModal'),timeInput=document.getElementById('timeInput'),sysTimeNotice=document.getElementById('sysTimeNotice'),timeDisplay=document.getElementById('timeDisplay'),modeDisplay=document.getElementById('modeDisplay'),celestialIcon=document.getElementById('celestialIcon'),pauseIcon=document.getElementById('pauseIcon');let simTime=0,currentHour=12,isPaused=false,dialogActive=true,lastTimestamp=performance.now();function getThailandHour(){const now=new Date(),utc=now.getTime()+now.getTimezoneOffset()*60000,th=new Date(utc+3600000*7);return th.getHours()%24+th.getMinutes()/60+th.getSeconds()/3600}function formatHourString(hr){const h=Math.floor(hr%24),m=Math.floor((hr%24-h)*60);return`${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`}function parseTimeInput(val,defaultHr){if(!val||!val.trim())return defaultHr;const parts=val.replace('.',':').split(':'),hr=parseFloat(parts[0]),mn=parts.length>1?parseFloat(parts[1]):0;if(isNaN(hr)||hr<0||hr>=24||isNaN(mn)||mn<0||mn>=60)return defaultHr;return(hr+mn/60)%24}function updateHUD(){timeDisplay.innerText=formatHourString(currentHour)+' น.';const{isNight}=getCelestialInfo(currentHour);celestialIcon.innerText=isNight?'🌙':'☀️';modeDisplay.innerText=isNight?'Nighttime - Moon & Stars':'Daytime - Sun'}function openTimeDialog(){dialogActive=true;const h=getThailandHour();sysTimeNotice.innerText=`เวลาจริงระบบ: ${formatHourString(h)} น.`;timeInput.value=formatHourString(currentHour);timeModal.style.opacity='1';timeModal.style.pointerEvents='auto';setTimeout(()=>timeInput.select(),50)}function closeTimeDialog(hour){currentHour=(hour%24+24)%24;dialogActive=false;timeModal.style.opacity='0';timeModal.style.pointerEvents='none';updateHUD()}document.getElementById('btnConfirmTime').addEventListener('click',()=>closeTimeDialog(parseTimeInput(timeInput.value,getThailandHour())));document.querySelectorAll('.chip-btn').forEach(btn=>btn.addEventListener('click',()=>{const h=parseFloat(btn.dataset.hour);closeTimeDialog(h<0?getThailandHour():h)}));timeInput.addEventListener('keydown',e=>{if(e.key==='Enter')closeTimeDialog(parseTimeInput(timeInput.value,getThailandHour()))});document.getElementById('btnOpenModal').addEventListener('click',openTimeDialog);document.getElementById('btnPause').addEventListener('click',()=>{isPaused=!isPaused;pauseIcon.innerText=isPaused?'▶️':'⏸️'});document.getElementById('btnReset').addEventListener('click',()=>{simTime=0});document.getElementById('btnMinus1h').addEventListener('click',()=>{currentHour=(currentHour-1+24)%24;updateHUD()});document.getElementById('btnMinus15m').addEventListener('click',()=>{currentHour=(currentHour-.25+24)%24;updateHUD()});document.getElementById('btnPlus15m').addEventListener('click',()=>{currentHour=(currentHour+.25)%24;updateHUD()});document.getElementById('btnPlus1h').addEventListener('click',()=>{currentHour=(currentHour+1)%24;updateHUD()});window.addEventListener('keydown',e=>{if(dialogActive)return;if(e.key==='t'||e.key==='T')openTimeDialog();else if(e.key===' '){isPaused=!isPaused;pauseIcon.innerText=isPaused?'▶️':'⏸️';e.preventDefault()}else if(e.key==='r'||e.key==='R')simTime=0;else if(e.key==='ArrowLeft'){currentHour=(currentHour-.25+24)%24;updateHUD()}else if(e.key==='ArrowRight'){currentHour=(currentHour+.25)%24;updateHUD()}else if(e.key==='ArrowUp'){currentHour=(currentHour+1)%24;updateHUD()}else if(e.key==='ArrowDown'){currentHour=(currentHour-1+24)%24;updateHUD()}});currentHour=getThailandHour();openTimeDialog();function animate(ts){const dt=Math.min(.1,(ts-lastTimestamp)/1000);lastTimestamp=ts;if(!isPaused&&!dialogActive)simTime+=dt;renderScene(simTime,currentHour,ctx);requestAnimationFrame(animate)}requestAnimationFrame(ts=>{lastTimestamp=ts;animate(ts)});
-</script>
+
+    <!-- Main Canvas Frame Container -->
+    <div id="canvas-container" class="relative border border-slate-800/80">
+        
+        <!-- Render Canvas -->
+        <canvas id="mainCanvas" width="720" height="1280"></canvas>
+
+        <!-- Top HUD Controls Overlay -->
+        <div class="absolute top-3 left-3 right-3 flex flex-col gap-2 z-10 pointer-events-none">
+            <div class="glass-panel rounded-xl p-2.5 px-4 flex items-center justify-between pointer-events-auto">
+                <div class="flex items-center gap-2.5">
+                    <span id="celestialIcon" class="text-xl">☀️</span>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <div id="timeDisplay" class="text-sm font-semibold tracking-wide text-amber-200 font-mono">12:00:00 น. (GMT+7)</div>
+                        </div>
+                        <div id="modeDisplay" class="text-[11px] text-sky-200/80 font-light">Real-time GMT+7 Tracking</div>
+                    </div>
+                </div>
+
+                <!-- HUD Quick Action Buttons -->
+                <div class="flex items-center gap-1.5">
+                    <button id="btnPause" class="glass-card hover:bg-white/20 text-xs p-1.5 px-2.5 rounded-lg transition active:scale-95 flex items-center gap-1" title="พัก / เล่นต่อ">
+                        <span id="pauseIcon">⏸️</span>
+                    </button>
+                    <button id="btnReset" class="glass-card hover:bg-white/20 text-xs p-1.5 px-2.5 rounded-lg transition active:scale-95 flex items-center gap-1" title="เริ่มโตใหม่">
+                        <span>🔄</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Application Script Engine -->
+    <script>
+        // =========================================================================
+        // Seeded Pseudo Random Number Generator (Mulberry32 & Gaussian)
+        // =========================================================================
+        function mulberry32(a) {
+            return function() {
+                let t = a += 0x6D2B79F5;
+                t = Math.imul(t ^ t >>> 15, t | 1);
+                t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+                return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            };
+        }
+
+        function createRng(seed) {
+            const gen = mulberry32(seed);
+            return {
+                random: gen,
+                uniform: (min, max) => min + (max - min) * gen(),
+                normal: (mean = 0, std = 1) => {
+                    let u = 0, v = 0;
+                    while (u === 0) u = gen();
+                    while (v === 0) v = gen();
+                    return mean + std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+                },
+                triangular: (low, high, mode) => {
+                    const u = gen();
+                    const c = (mode - low) / (high - low);
+                    if (u < c) return low + Math.sqrt(u * (high - low) * (mode - low));
+                    return high - Math.sqrt((1 - u) * (high - low) * (high - mode));
+                },
+                integers: (min, max) => Math.floor(min + gen() * (max - min))
+            };
+        }
+
+        const rngMain = createRng(11);
+
+        // =========================================================================
+        // Math & Interpolation Helpers
+        // =========================================================================
+        const W = 720, H = 1280;
+        const S = W / 720.0;
+        const FPS = 60;
+        const T_STEM = 4.0;
+        const T_B0 = 5.0, T_B1 = 15.0;
+        const gx = W / 2, gy = H * 0.82;
+        const HS = 380 * S;
+
+        function smooth(x) {
+            x = Math.max(0, Math.min(1, x));
+            return x * x * (3 - 2 * x);
+        }
+
+        function lerp(a, b, t) {
+            return a + (b - a) * t;
+        }
+
+        function interp(xVal, xArr, yArr) {
+            if (xVal <= xArr[0]) return yArr[0];
+            if (xVal >= xArr[xArr.length - 1]) return yArr[yArr.length - 1];
+            for (let i = 0; i < xArr.length - 1; i++) {
+                if (xVal >= xArr[i] && xVal <= xArr[i + 1]) {
+                    const k = (xVal - xArr[i]) / (xArr[i + 1] - xArr[i]);
+                    return yArr[i] + k * (yArr[i + 1] - yArr[i]);
+                }
+            }
+            return yArr[0];
+        }
+
+        // =========================================================================
+        // Celestial Engine (24-Hour Palette, Sun, Moon, Stars, Sky & Clouds)
+        // =========================================================================
+        const SKY_PALETTES = [
+            { h: 0.0,  top: [10, 14, 32],   bot: [25, 40, 75] },    // Midnight
+            { h: 4.5,  top: [14, 18, 40],   bot: [35, 50, 90] },    // Pre-dawn
+            { h: 5.8,  top: [45, 55, 115],  bot: [180, 110, 100] }, // Dawn
+            { h: 6.8,  top: [65, 120, 210], bot: [255, 185, 125] }, // Sunrise
+            { h: 9.0,  top: [60, 145, 235], bot: [170, 220, 252] }, // Morning
+            { h: 12.0, top: [55, 150, 240], bot: [180, 228, 255] }, // Noon
+            { h: 15.5, top: [65, 140, 230], bot: [195, 215, 245] }, // Afternoon
+            { h: 17.2, top: [50, 85, 175],  bot: [245, 170, 95] },  // Golden Hour
+            { h: 18.2, top: [32, 45, 105],  bot: [225, 100, 70] },  // Sunset
+            { h: 19.2, top: [18, 26, 65],   bot: [75, 55, 100] },   // Twilight
+            { h: 21.0, top: [12, 16, 36],   bot: [30, 45, 80] },    // Dusk
+            { h: 24.0, top: [10, 14, 32],   bot: [25, 40, 75] },    // Midnight Loop
+        ];
+
+        function getSkyColors(hour) {
+            const h = hour % 24.0;
+            for (let i = 0; i < SKY_PALETTES.length - 1; i++) {
+                const p0 = SKY_PALETTES[i];
+                const p1 = SKY_PALETTES[i + 1];
+                if (p0.h <= h && h <= p1.h) {
+                    const k = (h - p0.h) / (p1.h - p0.h + 1e-6);
+                    const top = [
+                        Math.round(lerp(p0.top[0], p1.top[0], k)),
+                        Math.round(lerp(p0.top[1], p1.top[1], k)),
+                        Math.round(lerp(p0.top[2], p1.top[2], k))
+                    ];
+                    const bot = [
+                        Math.round(lerp(p0.bot[0], p1.bot[0], k)),
+                        Math.round(lerp(p0.bot[1], p1.bot[1], k)),
+                        Math.round(lerp(p0.bot[2], p1.bot[2], k))
+                    ];
+                    return { top, bot };
+                }
+            }
+            return { top: SKY_PALETTES[0].top, bot: SKY_PALETTES[0].bot };
+        }
+
+        function getCelestialInfo(hour) {
+            const h = hour % 24.0;
+            const isNight = (h < 6.0) || (h >= 18.0);
+            let p = 0;
+            if (!isNight) {
+                p = (h - 6.0) / 12.0;
+            } else {
+                p = (h >= 18.0) ? (h - 18.0) / 12.0 : (h + 6.0) / 12.0;
+            }
+            const cx = lerp(W * 0.14, W * 0.86, p);
+            const cy = (H * 0.58) - Math.sin(Math.PI * p) * (H * 0.43);
+            return { isNight, cx, cy, p };
+        }
+
+        // Draw Pointillist Sun onto Offscreen Canvas
+        function drawPointillistSun(ctx, cx, cy, rng, hour) {
+            const h = hour % 24.0;
+            const noonDiff = Math.abs(h - 12.0) / 6.0;
+
+            // 1. Solar Corona Rays
+            const N_CORONA = 1400;
+            for (let i = 0; i < N_CORONA; i++) {
+                const rCor = Math.pow(rng.uniform(28 * S, 210 * S), 1.15) / Math.pow(210 * S, 0.15);
+                const rayBase = (Math.floor(rng.uniform(0, 8)) * (2 * Math.PI / 8));
+                const thCor = rayBase + rng.normal(0, 0.22);
+                const px = Math.round(cx + rCor * Math.cos(thCor));
+                const py = Math.round(cy + rCor * Math.sin(thCor));
+
+                if (px >= 0 && px < W && py >= 0 && py < H) {
+                    const fade = Math.max(0, Math.min(1, 1.0 - (rCor / (210 * S))));
+                    const alpha = Math.round(140 * Math.pow(fade, 1.8)) / 255;
+                    if (alpha > 0.01) {
+                        const rC = 255;
+                        const gC = Math.round(lerp(180, 245, (1.0 - noonDiff) * fade));
+                        const bC = Math.round(lerp(80, 205, (1.0 - noonDiff) * fade));
+                        const rad = rng.random() < 0.75 ? 1 : 2;
+                        ctx.fillStyle = `rgba(${rC},${gC},${bC},${alpha})`;
+                        ctx.fillRect(px, py, rad, rad);
+                    }
+                }
+            }
+
+            // 2. Dense Core
+            const N_CORE = 850;
+            for (let i = 0; i < N_CORE; i++) {
+                const rCore = Math.sqrt(rng.random()) * (34 * S);
+                const thCore = rng.uniform(0, 2 * Math.PI);
+                const px = Math.round(cx + rCore * Math.cos(thCore));
+                const py = Math.round(cy + rCore * Math.sin(thCore));
+
+                if (px >= 0 && px < W && py >= 0 && py < H) {
+                    const fade = Math.max(0, Math.min(1, 1.0 - (rCore / (34 * S))));
+                    const alpha = Math.round(lerp(180, 255, fade)) / 255;
+                    const rC = 255;
+                    const gC = Math.round(lerp(220, 255, 1.0 - noonDiff * 0.3));
+                    const bC = Math.round(lerp(150, 245, 1.0 - noonDiff * 0.5));
+                    const rad = rng.random() < 0.65 ? 1 : 2;
+                    ctx.fillStyle = `rgba(${rC},${gC},${bC},${alpha})`;
+                    ctx.fillRect(px, py, rad, rad);
+                }
+            }
+        }
+
+        // Draw Pointillist Crescent Moon onto Offscreen Canvas
+        function drawPointillistMoon(ctx, cx, cy, rng) {
+            // Lunar Halo
+            const N_HALO = 900;
+            for (let i = 0; i < N_HALO; i++) {
+                const rH = Math.pow(rng.uniform(22 * S, 160 * S), 1.1) / Math.pow(160 * S, 0.1);
+                const thH = rng.uniform(0, 2 * Math.PI);
+                const px = Math.round(cx + rH * Math.cos(thH));
+                const py = Math.round(cy + rH * Math.sin(thH));
+
+                if (px >= 0 && px < W && py >= 0 && py < H) {
+                    const fade = Math.max(0, Math.min(1, 1.0 - (rH / (160 * S))));
+                    const alpha = Math.round(110 * Math.pow(fade, 1.6)) / 255;
+                    if (alpha > 0.01) {
+                        ctx.fillStyle = `rgba(210,230,255,${alpha})`;
+                        ctx.fillRect(px, py, 1, 1);
+                    }
+                }
+            }
+
+            // Crescent Core
+            const N_MOON = 1000;
+            let count = 0;
+            const rMax = 30 * S;
+            while (count < N_MOON) {
+                const candX = rng.uniform(-rMax, rMax);
+                const candY = rng.uniform(-rMax, rMax);
+                if (candX * candX + candY * candY <= rMax * rMax) {
+                    const cutX = candX - 11 * S;
+                    const cutY = candY;
+                    if (cutX * cutX + cutY * cutY >= (rMax * 0.88) * (rMax * 0.88)) {
+                        const px = Math.round(cx + candX);
+                        const py = Math.round(cy + candY);
+                        if (px >= 0 && px < W && py >= 0 && py < H) {
+                            const alpha = rng.uniform(190, 255) / 255;
+                            const rC = rng.integers(235, 255);
+                            const gC = rng.integers(245, 255);
+                            const rad = rng.random() < 0.70 ? 1 : 2;
+                            ctx.fillStyle = `rgba(${rC},${gC},255,${alpha})`;
+                            ctx.fillRect(px, py, rad, rad);
+                        }
+                        count++;
+                    }
+                }
+            }
+        }
+
+        // Draw Twinkling Night Stars
+        function drawNightStars(ctx, rng) {
+            const N_STARS = 140;
+            for (let i = 0; i < N_STARS; i++) {
+                const px = Math.round(rng.uniform(20, W - 20));
+                const py = Math.round(rng.uniform(20, H * 0.65));
+                const alpha = rng.uniform(90, 240) / 255;
+                const rad = rng.random() < 0.85 ? 1 : 2;
+                ctx.fillStyle = `rgba(240,248,255,${alpha})`;
+                ctx.fillRect(px, py, rad, rad);
+            }
+        }
+
+        // Generate Pre-rendered Sky Base Canvas
+        function createSkyCanvas(hour) {
+            const canvas = document.createElement('canvas');
+            canvas.width = W;
+            canvas.height = H;
+            const ctx = canvas.getContext('2d');
+
+            const { top, bot } = getSkyColors(hour);
+            const grad = ctx.createLinearGradient(0, 0, 0, H);
+            grad.addColorStop(0, `rgb(${top[0]},${top[1]},${top[2]})`);
+            grad.addColorStop(1, `rgb(${bot[0]},${bot[1]},${bot[2]})`);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, W, H);
+
+            const { isNight, cx, cy } = getCelestialInfo(hour);
+            const rngCel = createRng(Math.floor(hour * 100) + 123);
+
+            if (isNight) {
+                drawNightStars(ctx, rngCel);
+                drawPointillistMoon(ctx, cx, cy, rngCel);
+            } else {
+                drawPointillistSun(ctx, cx, cy, rngCel, hour);
+            }
+            return canvas;
+        }
+
+        // Pointillist Cloud Surfaces Generator
+        function createCloudCanvas(width, height, seed) {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            const rngC = createRng(seed);
+
+            const numPuffs = 8;
+            const puffs = [];
+            for (let i = 0; i < numPuffs; i++) {
+                puffs.push({
+                    px: rngC.uniform(width * 0.18, width * 0.82),
+                    py: rngC.triangular(height * 0.35, height * 0.60, height * 0.78),
+                    rx: rngC.uniform(width * 0.12, width * 0.22),
+                    ry: rngC.uniform(height * 0.15, height * 0.30)
+                });
+            }
+
+            const N_PTS = 3800;
+            for (let i = 0; i < N_PTS; i++) {
+                const idx = rngC.integers(0, numPuffs);
+                const p = puffs[idx];
+                const ptX = p.px + rngC.normal(0, 0.45) * p.rx;
+                const ptY = p.py + rngC.normal(0, 0.42) * p.ry;
+
+                if (ptX >= 0 && ptX < width && ptY >= 0 && ptY < height) {
+                    const yVal = ptY / height;
+                    let r, g, b, alpha;
+
+                    if (yVal < 0.45) {
+                        r = Math.round(lerp(250, 255, rngC.random()));
+                        g = Math.round(lerp(252, 255, rngC.random()));
+                        b = 255;
+                        alpha = rngC.uniform(160, 230) / 255;
+                    } else if (yVal < 0.70) {
+                        r = Math.round(lerp(235, 250, rngC.random()));
+                        g = Math.round(lerp(242, 252, rngC.random()));
+                        b = Math.round(lerp(250, 255, rngC.random()));
+                        alpha = rngC.uniform(130, 200) / 255;
+                    } else {
+                        r = Math.round(lerp(185, 215, rngC.random()));
+                        g = Math.round(lerp(210, 230, rngC.random()));
+                        b = Math.round(lerp(238, 248, rngC.random()));
+                        alpha = rngC.uniform(90, 160) / 255;
+                    }
+
+                    const rad = rngC.random() < 0.70 ? 1 : 2;
+                    ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+                    ctx.fillRect(Math.round(ptX), Math.round(ptY), rad, rad);
+                }
+            }
+            return canvas;
+        }
+
+        const CLOUD_CONFIGS = [
+            { w: Math.round(520 * S), h: Math.round(200 * S), y: Math.round(90 * S),  speed: 4.5 * S,  seed: 101 },
+            { w: Math.round(440 * S), h: Math.round(170 * S), y: Math.round(270 * S), speed: 7.5 * S,  seed: 202 },
+            { w: Math.round(490 * S), h: Math.round(190 * S), y: Math.round(470 * S), speed: 5.5 * S,  seed: 303 }
+        ];
+
+        let cachedSkyBase = null;
+        let lastRenderedHour = -999.0;
+        let cloudCanvases = null;
+
+        function getBackground(t, hour, ctxTarget) {
+            if (!cachedSkyBase || Math.abs(hour - lastRenderedHour) > 0.02) {
+                cachedSkyBase = createSkyCanvas(hour);
+                lastRenderedHour = hour;
+            }
+
+            if (!cloudCanvases) {
+                cloudCanvases = CLOUD_CONFIGS.map(c => createCloudCanvas(c.w, c.h, c.seed));
+            }
+
+            ctxTarget.drawImage(cachedSkyBase, 0, 0);
+
+            CLOUD_CONFIGS.forEach((c, i) => {
+                const totalSpan = W + c.w;
+                const offset = i * (totalSpan / CLOUD_CONFIGS.length);
+                const curX = (t * c.speed + offset) % totalSpan - c.w;
+                ctxTarget.drawImage(cloudCanvases[i], Math.round(curX), Math.round(c.y));
+            });
+        }
+
+        // =========================================================================
+        // Red Lily Plant & Flower Physical Simulation Data Structures
+        // =========================================================================
+        function midrib(L, a0, curl, K = 40) {
+            const us = new Float32Array(K + 1);
+            const r = new Float32Array(K + 1);
+            const h = new Float32Array(K + 1);
+            const ds = L / K;
+            let sumR = 0, sumH = 0;
+            us[0] = 0; r[0] = 0; h[0] = 0;
+
+            for (let i = 1; i <= K; i++) {
+                us[i] = i / K;
+                const al = a0 + curl * Math.pow(us[i], 1.6);
+                sumR += Math.sin(al) * ds;
+                sumH += Math.cos(al) * ds;
+                r[i] = sumR;
+                h[i] = sumH;
+            }
+            return { us, r, h };
+        }
+
+        // 1. Petals Data Setup
+        const NP = 2300;
+        const petals = [];
+        for (let k = 0; k < 6; k++) {
+            const outer = (k % 2 === 0);
+            const pu = new Float32Array(NP);
+            const pv = new Float32Array(NP);
+            const prof = new Float32Array(NP);
+            const keep = new Uint8Array(NP);
+            const base = new Float32Array(NP * 3);
+
+            const stopsX = [0, 0.35, 0.7, 1.0];
+            const stopR = [170, 222, 245, 255];
+            const stopG = [10, 16, 24, 42];
+            const stopB = [20, 24, 32, 48];
+
+            for (let i = 0; i < NP; i++) {
+                pu[i] = Math.pow(rngMain.random(), 0.85);
+                pv[i] = rngMain.uniform(-1, 1);
+                prof[i] = Math.pow(Math.sin(Math.PI * Math.pow(pu[i], 0.7)), 0.9);
+                keep[i] = Math.abs(pv[i]) <= 1 ? 1 : 0;
+
+                let rC = interp(pu[i], stopsX, stopR);
+                let gC = interp(pu[i], stopsX, stopG);
+                let bC = interp(pu[i], stopsX, stopB);
+
+                // Midrib highlight
+                if (Math.abs(pv[i]) < 0.07 && pu[i] < 0.55) {
+                    rC = 255; gC = 95; bC = 45;
+                } else if (rngMain.random() < 0.10 && pu[i] < 0.6 && Math.abs(pv[i]) < 0.75) {
+                    // Freckles
+                    rC = 92; gC = 4; bC = 18;
+                }
+
+                // Edge brightness
+                if (Math.abs(pv[i]) > 0.88) {
+                    rC *= 1.08; gC *= 1.08; bC *= 1.08;
+                }
+
+                const noise = 0.82 + 0.35 * rngMain.random();
+                base[i * 3 + 0] = Math.min(255, rC * noise);
+                base[i * 3 + 1] = Math.min(255, gC * noise);
+                base[i * 3 + 2] = Math.min(255, bC * noise);
+            }
+
+            petals.push({
+                phi: (k * 60 + 8) * Math.PI / 180,
+                L: (outer ? 300 : 280) * S,
+                Wm: (outer ? 64 : 72) * S,
+                ac: outer ? 0.10 : 0.05,
+                ao: outer ? 1.05 : 0.82,
+                curl: outer ? 0.95 : 0.75,
+                pu, pv, prof, base, keep
+            });
+        }
+
+        // 2. Stem Data Setup
+        const NS = 3200;
+        const st_s = new Float32Array(NS);
+        const st_dx = new Float32Array(NS);
+        const st_col = new Float32Array(NS * 3);
+        for (let i = 0; i < NS; i++) {
+            st_s[i] = rngMain.random();
+            st_dx[i] = rngMain.normal(0, 1) * (3.2 * S) * (1 - 0.5 * st_s[i]);
+            const noise = 0.8 + 0.4 * rngMain.random();
+            st_col[i * 3 + 0] = lerp(35, 100, st_s[i]) * noise;
+            st_col[i * 3 + 1] = lerp(145, 215, st_s[i]) * noise;
+            st_col[i * 3 + 2] = lerp(50, 95, st_s[i]) * noise;
+        }
+
+        // 3. Leaves Data Setup
+        const leavesConfig = [
+            { s0: 0.10, Lf: 190, side: 1 },
+            { s0: 0.24, Lf: 175, side: -1 },
+            { s0: 0.40, Lf: 150, side: 1 },
+            { s0: 0.56, Lf: 120, side: -1 }
+        ];
+        const leaves = leavesConfig.map(cfg => {
+            const n = 900;
+            const u = new Float32Array(n);
+            const v = new Float32Array(n);
+            const prof = new Float32Array(n);
+            const col = new Float32Array(n * 3);
+
+            for (let i = 0; i < n; i++) {
+                u[i] = Math.pow(rngMain.random(), 0.9);
+                v[i] = rngMain.uniform(-1, 1);
+                prof[i] = Math.pow(Math.sin(Math.PI * Math.pow(u[i], 0.8)), 0.8);
+
+                let rC = lerp(35, 110, u[i]);
+                let gC = lerp(145, 220, u[i]);
+                let bC = lerp(55, 105, u[i]);
+
+                if (Math.abs(v[i]) < 0.08) {
+                    rC = 170; gC = 235; bC = 150;
+                }
+                const noise = 0.8 + 0.4 * rngMain.random();
+                col[i * 3 + 0] = Math.min(255, rC * noise);
+                col[i * 3 + 1] = Math.min(255, gC * noise);
+                col[i * 3 + 2] = Math.min(255, bC * noise);
+            }
+            return { s0: cfg.s0, L: cfg.Lf * S, side: cfg.side, n, u, v, prof, col };
+        });
+
+        // 4. Soil Mound Data
+        const NG = 5000;
+        const so_dx = new Float32Array(NG);
+        const so_y = new Float32Array(NG);
+        const so_col = new Float32Array(NG * 3);
+        for (let i = 0; i < NG; i++) {
+            so_dx[i] = rngMain.uniform(-340, 340) * S;
+            const mound = (1 - Math.pow(so_dx[i] / (340 * S), 2)) * 55 * S;
+            so_y[i] = gy - mound * Math.sqrt(rngMain.random()) + rngMain.normal(0, 1.5);
+            so_col[i * 3 + 0] = lerp(80, 130, rngMain.random()) * 0.8;
+            so_col[i * 3 + 1] = lerp(65, 100, rngMain.random()) * 0.8;
+            so_col[i * 3 + 2] = lerp(42, 65, rngMain.random()) * 0.8;
+        }
+
+        // 5. Dust Particles
+        const ND = 450;
+        const d_x = new Float32Array(ND);
+        const d_y = new Float32Array(ND);
+        const d_sp = new Float32Array(ND);
+        const d_ph = new Float32Array(ND);
+        const d_f = new Float32Array(ND);
+        for (let i = 0; i < ND; i++) {
+            d_x[i] = rngMain.random() * W;
+            d_y[i] = rngMain.random() * H;
+            d_sp[i] = rngMain.uniform(6, 22) * S;
+            d_ph[i] = rngMain.random() * 6.28;
+            d_f[i] = rngMain.uniform(1, 4);
+        }
+
+        // Pollen Spores
+        const NF = 140;
+        const f_off = new Float32Array(NF);
+        const f_ph = new Float32Array(NF);
+        const f_dr = new Float32Array(NF);
+        const f_sp = new Float32Array(NF);
+        for (let i = 0; i < NF; i++) {
+            f_off[i] = rngMain.random();
+            f_ph[i] = rngMain.random() * 6.28;
+            f_dr[i] = rngMain.uniform(-80, 80) * S;
+            f_sp[i] = rngMain.uniform(0.05, 0.12);
+        }
+
+        // 6. Stamens
+        const stam = [];
+        for (let k = 0; k < 6; k++) {
+            const an = new Float32Array(35 * 2);
+            for (let j = 0; j < 35 * 2; j++) an[j] = rngMain.normal(0, 1);
+            stam.push({ phi: (k * 60 + 38) * Math.PI / 180, an });
+        }
+
+        function stemX(s, t) {
+            const sway = 10 * S * Math.sin(0.9 * t);
+            return gx + 30 * S * Math.sin(2.2 * s) + sway * s * s;
+        }
+
+        function stemY(s) {
+            return gy - s * HS;
+        }
+
+        // Point particle sorting container
+        let pointPool = [];
+
+        // Main Render Loop onto Canvas
+        function renderScene(t, hour, ctx) {
+            pointPool = [];
+
+            const g = smooth(t / T_STEM);
+            const e = smooth((t - T_B0) / (T_B1 - T_B0));
+            const rev = smooth((t - T_STEM + 0.3) / 1.6);
+
+            const hx = stemX(1.0, t);
+            const hy = stemY(1.0);
+
+            // 1. Dust Particles
+            for (let i = 0; i < ND; i++) {
+                const tw = 0.35 + 0.65 * (Math.sin(t * d_f[i] + d_ph[i]) > 0.2 ? 1 : 0);
+                const yy = ((d_y[i] - t * d_sp[i]) % H + H) % H;
+                pointPool.push({
+                    x: d_x[i], y: yy, z: -1000,
+                    r: 255 * tw * 0.65, g: 245 * tw * 0.65, b: 210 * tw * 0.65
+                });
+            }
+
+            // 2. Soil Base
+            for (let i = 0; i < NG; i++) {
+                pointPool.push({
+                    x: so_dx[i] + gx, y: so_y[i], z: -500,
+                    r: so_col[i * 3 + 0], g: so_col[i * 3 + 1], b: so_col[i * 3 + 2]
+                });
+            }
+
+            // 3. Stem Growth
+            for (let i = 0; i < NS; i++) {
+                if (st_s[i] <= g) {
+                    const s = st_s[i];
+                    pointPool.push({
+                        x: stemX(s, t) + st_dx[i], y: stemY(s), z: -100,
+                        r: st_col[i * 3 + 0], g: st_col[i * 3 + 1], b: st_col[i * 3 + 2]
+                    });
+                }
+            }
+
+            // 4. Leaves Flutter
+            leaves.forEach(lf => {
+                const lg = Math.max(0, Math.min(1, (g - lf.s0) * 2.5));
+                if (lg > 0.01) {
+                    const L = lf.L * lg;
+                    const a0 = 0.85 + 0.09 * Math.sin(t * 1.5 + lf.s0 * 4.5);
+                    const curl = 1.10 + 0.18 * Math.cos(t * 1.3 + lf.s0 * 3.8);
+                    const { us, r, h } = midrib(L, a0, curl);
+
+                    const bx = stemX(lf.s0, t);
+                    const by = stemY(lf.s0);
+
+                    for (let i = 0; i < lf.n; i++) {
+                        const uVal = lf.u[i];
+                        const vVal = lf.v[i];
+                        const rr = interp(uVal, us, r);
+                        const hh = interp(uVal, us, h);
+
+                        const wavePhase = t * 2.6 - uVal * 3.6 + lf.s0 * 6.0;
+                        const waveY = Math.sin(wavePhase) * Math.pow(uVal, 1.6) * (12 * S);
+                        const waveX = Math.cos(wavePhase * 0.8) * Math.pow(uVal, 1.5) * (7 * S);
+
+                        const wid = 15 * S * lf.prof[i] * lg;
+                        const px = bx + lf.side * (rr + vVal * wid * 0.35 + waveX);
+                        const py = by - hh + vVal * wid + waveY;
+
+                        pointPool.push({
+                            x: px, y: py, z: -90,
+                            r: lf.col[i * 3 + 0], g: lf.col[i * 3 + 1], b: lf.col[i * 3 + 2]
+                        });
+                    }
+                }
+            });
+
+            // 5. Red Lily Petals Bloom Sequence
+            if (rev > 0.01) {
+                const psi = 0.25 + t * 0.22;
+                const tau = 0.5;
+                const cp = Math.cos(psi), sp = Math.sin(psi);
+                const ct = Math.cos(tau), st = Math.sin(tau);
+                const swayT = Math.sin(t * 0.8) * 0.02;
+
+                petals.forEach(p => {
+                    const Ls = p.L * (0.45 + 0.55 * e) * (0.35 + 0.65 * rev);
+                    const a0 = lerp(p.ac, p.ao, e);
+                    const curl = (0.12 + 0.88 * e) * p.curl;
+                    const { us, r, h } = midrib(Ls, a0, curl);
+
+                    for (let i = 0; i < NP; i++) {
+                        const puVal = p.pu[i];
+                        if (puVal <= rev && p.keep[i]) {
+                            const pvVal = p.pv[i];
+                            const prVal = p.prof[i];
+                            const rr = interp(puVal, us, r);
+                            const hh = interp(puVal, us, h);
+                            const wid = p.Wm * (0.55 + 0.45 * e) * prVal * (0.35 + 0.65 * rev);
+                            const ph = p.phi;
+
+                            const X = rr * Math.cos(ph) - pvVal * wid * Math.sin(ph);
+                            const Z = rr * Math.sin(ph) + pvVal * wid * Math.cos(ph);
+                            const Y = hh + (pvVal * pvVal) * wid * (0.30 * (1 - e) - 0.25 * e);
+
+                            const Xp = X * cp + Z * sp;
+                            const Zp = -X * sp + Z * cp;
+                            const sy = Y * ct - Zp * st;
+
+                            const shade = 0.55 + 0.45 * Math.max(0, Math.min(1, Zp / p.L * 0.8 + 0.5));
+
+                            let rC = p.base[i * 3 + 0];
+                            let gC = p.base[i * 3 + 1];
+                            let bC = p.base[i * 3 + 2];
+
+                            const tint = (1 - e) * Math.max(0, Math.min(1, puVal * 1.3)) * 0.5;
+                            rC = rC * (1 - tint) + 235 * tint;
+                            gC = gC * (1 - tint) + 30 * tint;
+                            bC = bC * (1 - tint) + 48 * tint;
+
+                            pointPool.push({
+                                x: hx + Xp + swayT * sy, y: hy - sy, z: Zp,
+                                r: rC * shade, g: gC * shade, b: bC * shade
+                            });
+                        }
+                    }
+                });
+
+                // Stamens & Golden Anthers
+                if (e > 0.28) {
+                    const sr = smooth((e - 0.28) / 0.4);
+                    stam.forEach(sdat => {
+                        const Ls = 215 * S * (0.4 + 0.6 * e) * sr;
+                        const { us, r, h } = midrib(Ls, lerp(0.15, 0.62, e), 0.55 * e);
+
+                        // Filament dots
+                        for (let j = 0; j < 45; j++) {
+                            const uVal = (j / 45);
+                            const rr = interp(uVal, us, r);
+                            const hh = interp(uVal, us, h);
+                            const ph = sdat.phi;
+                            const X = rr * Math.cos(ph), Z = rr * Math.sin(ph), Y = hh;
+                            const Xp = X * cp + Z * sp;
+                            const Zp = -X * sp + Z * cp;
+                            const sy = Y * ct - Zp * st;
+
+                            pointPool.push({
+                                x: hx + Xp, y: hy - sy, z: Zp + 5,
+                                r: 255, g: 215, b: 205
+                            });
+                        }
+
+                        // Anther Pollen cluster
+                        const tx = r[r.length - 1] * Math.cos(sdat.phi);
+                        const tz = r[r.length - 1] * Math.sin(sdat.phi);
+                        const ty = h[h.length - 1];
+                        const txp = tx * cp + tz * sp;
+                        const tzp = -tx * sp + tz * cp;
+                        const tsy = ty * ct - tzp * st;
+
+                        for (let j = 0; j < 35; j++) {
+                            const anx = sdat.an[j * 2 + 0] * 5 * S;
+                            const any = sdat.an[j * 2 + 1] * 5 * S;
+                            const noise = 0.8 + 0.4 * rngMain.random();
+
+                            pointPool.push({
+                                x: hx + txp + anx * 1.6, y: hy - tsy + any * 0.7, z: tzp + 6,
+                                r: Math.min(255, 255 * noise),
+                                g: Math.min(255, 140 * noise),
+                                b: Math.min(255, 20 * noise)
+                            });
+                        }
+                    });
+                }
+            }
+
+            // 6. Floating Pollen Particles
+            if (e > 0.6) {
+                const fa = smooth((e - 0.6) / 0.4);
+                for (let i = 0; i < NF; i++) {
+                    const q = (t * f_sp[i] + f_off[i]) % 1.0;
+                    const fx = hx + f_dr[i] * q + Math.sin(q * 7 + f_ph[i]) * 25 * S;
+                    const fy = (hy - 110 * S) + q * (gy - hy + 90 * S);
+                    const fade = (1 - q) * fa;
+
+                    const isGold = f_ph[i] > 3.1;
+                    const rC = (isGold ? 255 : 255) * fade;
+                    const gC = (isGold ? 245 : 130) * fade;
+                    const bC = (isGold ? 160 : 80) * fade;
+
+                    pointPool.push({ x: fx, y: fy, z: 300, r: rC, g: gC, b: bC });
+                }
+            }
+
+            // Sort points by depth Z ascending
+            pointPool.sort((a, b) => a.z - b.z);
+
+            // Draw Sky & Celestial background
+            getBackground(t, hour, ctx);
+
+            // Draw sorted particles onto canvas
+            const imgData = ctx.getImageData(0, 0, W, H);
+            const data = imgData.data;
+
+            for (let i = 0; i < pointPool.length; i++) {
+                const pt = pointPool[i];
+                const ix = Math.floor(pt.x);
+                const iy = Math.floor(pt.y);
+
+                if (ix >= 0 && ix < W - 2 && iy >= 0 && iy < H - 2) {
+                    const rVal = Math.min(255, Math.max(0, Math.round(pt.r)));
+                    const gVal = Math.min(255, Math.max(0, Math.round(pt.g)));
+                    const bVal = Math.min(255, Math.max(0, Math.round(pt.b)));
+
+                    // 2x2 particle pixel stamping
+                    const offsets = [
+                        (iy * W + ix) * 4,
+                        (iy * W + (ix + 1)) * 4,
+                        ((iy + 1) * W + ix) * 4
+                    ];
+
+                    for (let k = 0; k < offsets.length; k++) {
+                        const idx = offsets[k];
+                        data[idx]     = rVal;
+                        data[idx + 1] = gVal;
+                        data[idx + 2] = bVal;
+                    }
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        // =========================================================================
+        // Application Controller, Time Helpers & Event Listeners
+        // =========================================================================
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // State Variables
+        let simTime = 0.0;
+        let currentHour = 12.0;
+        let isPaused = false;
+        let lastTimestamp = performance.now();
+
+        // DOM Element Handles
+        const timeDisplay = document.getElementById('timeDisplay');
+        const modeDisplay = document.getElementById('modeDisplay');
+        const celestialIcon = document.getElementById('celestialIcon');
+        const pauseIcon = document.getElementById('pauseIcon');
+
+        // Get Real System Time in Thailand (GMT+7) with Millisecond Precision
+        function getThailandHour() {
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const thDate = new Date(utc + (3600000 * 7));
+            const hours = thDate.getHours();
+            const minutes = thDate.getMinutes();
+            const seconds = thDate.getSeconds();
+            const ms = thDate.getMilliseconds();
+            return (hours % 24) + (minutes / 60) + (seconds / 3600) + (ms / 3600000);
+        }
+
+        function formatRealTimeHMS() {
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const thDate = new Date(utc + (3600000 * 7));
+            const hStr = thDate.getHours().toString().padStart(2, '0');
+            const mStr = thDate.getMinutes().toString().padStart(2, '0');
+            const sStr = thDate.getSeconds().toString().padStart(2, '0');
+            return `${hStr}:${mStr}:${sStr} น. (GMT+7)`;
+        }
+
+        function updateHUD() {
+            timeDisplay.innerText = formatRealTimeHMS();
+
+            const { isNight } = getCelestialInfo(currentHour);
+            if (isNight) {
+                celestialIcon.innerText = "🌙";
+                modeDisplay.innerText = "Nighttime - Moon & Stars";
+            } else {
+                celestialIcon.innerText = "☀️";
+                modeDisplay.innerText = "Daytime - Sun";
+            }
+        }
+
+        // HUD Control Event Listeners
+        document.getElementById('btnPause').addEventListener('click', () => {
+            isPaused = !isPaused;
+            pauseIcon.innerText = isPaused ? "▶️" : "⏸️";
+        });
+
+        document.getElementById('btnReset').addEventListener('click', () => {
+            simTime = 0.0;
+        });
+
+        // Global Keyboard Shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (e.key === ' ') {
+                isPaused = !isPaused;
+                pauseIcon.innerText = isPaused ? "▶️" : "⏸️";
+                e.preventDefault();
+            } else if (e.key === 'r' || e.key === 'R') {
+                simTime = 0.0;
+            }
+        });
+
+        // Main Animation Loop
+        function animate(timestamp) {
+            const dt = Math.min(0.1, (timestamp - lastTimestamp) / 1000.0);
+            lastTimestamp = timestamp;
+
+            if (!isPaused) {
+                simTime += dt;
+            }
+
+            // Continuously track real Thailand time every frame
+            currentHour = getThailandHour();
+            updateHUD();
+
+            renderScene(simTime, currentHour, ctx);
+            requestAnimationFrame(animate);
+        }
+
+        // Launch Engine Loop
+        requestAnimationFrame((ts) => {
+            lastTimestamp = ts;
+            animate(ts);
+        });
+    </script>
 </body>
 </html>
